@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+#
+# Generate Git release notes
+#
+# Example:
+#   ./git-get-release-notes
+
+set -e
+
+subject=$(git log -n 1 --format=%s)
+body=$(git log -n 1 --format=%b | grep -E '^\*|^-' | sed 's/^*/-/g') || true
+
+if [[ -z ${body} ]]; then
+  release_notes="- ${subject}"
+else
+  release_notes="${body}"
+fi
+
+echo "${release_notes}"
