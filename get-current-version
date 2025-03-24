@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+branch=$(git branch --show-current)
+tags=$(git tag --merged ${branch} | sort -V)
+current_version=$(echo "${tags}" | tail -n 1)
+
+echo "${current_version}"

@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+
+branch=$(git branch --show-current)
+tags=$(git tag --merged ${branch} | sort -V)
+current_version=$(echo "${tags}" | tail -n 1)
+commit_comment=$(git log -1 --pretty=%B)
+semver_path="${CI_SCRIPTS}/semver"
+
+# no tags
+if [[ "${current_version}" == "" ]]; then
+  echo "0.1.0-1"
+  exit
+fi
+
+# bump major
+if [[ "${branch}" == "main" ]] && [[ "${commit_comment}" =~ .*\[bump-major\].* ]]; then
+  version=$(${semver_path} bump major ${current_version})
+  revision=$(${semver_path} bump prerel ${version})
+  echo "${revision}"
+  exit
+fi
+
+# current version released
+for t in ${tags}; do
+  if [[ "${branch}" == "main" ]] && [[ "${t}" == "${current_version%-*}" ]]; then
+    version=$(${semver_path} bump minor ${current_version})
+    revision=$(${semver_path} bump prerel ${version})
+    echo "${revision}"
+    exit
+  elif [[ "${branch}" =~ ^release-[0-9]*\.[0-9]*$ ]] && [[ "${t}" == "${current_version%-*}" ]]; then
+    version=$(${semver_path} bump patch ${current_version})
+    revision=$(${semver_path} bump prerel ${version})
+    echo "${revision}"
+    exit
+  fi
+done
+
+version=$(${semver_path} bump prerel ${current_version})
+echo "${version}"
