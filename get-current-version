@@ -1,7 +1,35 @@
 #!/usr/bin/env bash
+#
+# ./get-current-version
+# ./get-current-version --branch main --type release
 
-branch=$(git branch --show-current)
+while [ $# -gt 0 ]; do
+  case $1 in
+    --branch)
+      branch="${2}"
+      shift
+      shift
+      ;;
+    --type)
+      type="${2}"
+      shift
+      shift
+      ;;
+  esac
+done
+
+if [[ "${branch}" != "" ]]; then
+  branch=${branch}
+else
+  branch=$(git branch --show-current)
+fi
+
 tags=$(git tag --merged ${branch} | sort -V)
-current_version=$(echo "${tags}" | tail -n 1)
+
+if [[ "${type}" == "release" ]]; then
+  current_version=$(echo "${tags}" | grep -v '-' | tail -n 1)
+else
+  current_version=$(echo "${tags}" | tail -n 1)
+fi
 
 echo "${current_version}"
